@@ -18,7 +18,7 @@ st.write("Machine Learning–based food recommendations with visual display")
 # -------------------------------
 @st.cache_data
 def load_data():
-    return pd.read_csv("food_dataset.csv")
+    return pd.read_csv("FOOD-DATA-GROUP1.csv, FOOD-DATA-GROUP2.csv, FOOD-DATA-GROUP3.csv, FOOD-DATA-GROUP4.csv, FOOD-DATA-GROUP5.csv")
 
 df = load_data()
 
@@ -81,3 +81,4 @@ st.caption(
     "📌 Images are fetched dynamically from a public image service for visualization only. "
     "The recommendation logic is based on structured data and machine learning techniques."
 )
+
