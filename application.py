@@ -70,7 +70,12 @@ if st.button("Predict Nutrition"):
         col1, col2 = st.columns([1, 1])
         
         with col1:
-            st.image(image_url, caption=food, use_column_width=True)
+            image_url = f"https://source.unsplash.com/600x400/?{food.replace(' ', '%20')},food"
+
+response = requests.get(image_url)
+img = Image.open(BytesIO(response.content))
+
+st.image(img, caption=food, use_column_width=True)
         
         with col2:
             nutrition = nutrition_db[food]
@@ -98,3 +103,4 @@ if st.button("Predict Nutrition"):
         fig.update_layout(title_text="Macronutrient Breakdown")
         
         st.plotly_chart(fig, use_container_width=True)
+
