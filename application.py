@@ -1,6 +1,8 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import requests
+import random
+from bs4 import BeautifulSoup
 
 # -----------------------------
 # Nutrition Database
@@ -48,22 +50,27 @@ nutrition_db = {
 }
 
 # -----------------------------
-# Wikipedia Image Fetcher
+# DuckDuckGo Image Fetch
 # -----------------------------
 def get_food_image(food):
-    url = "https://en.wikipedia.org/api/rest_v1/page/summary/" + food.replace(" ", "%20")
-    res = requests.get(url)
+    search_url = f"https://duckduckgo.com/?q={food}+food&iax=images&ia=images"
+    headers = {"User-Agent": "Mozilla/5.0"}
 
-    if res.status_code == 200:
-        data = res.json()
-        if "thumbnail" in data:
-            return data["thumbnail"]["source"]
+    html = requests.get(search_url, headers=headers).text
+    soup = BeautifulSoup(html, "html.parser")
+
+    images = soup.find_all("img")
+
+    valid_imgs = [img["src"] for img in images if img.get("src") and "http" in img["src"]]
+
+    if valid_imgs:
+        return random.choice(valid_imgs)
 
     return None
 
 
 # -----------------------------
-# Streamlit UI
+# UI
 # -----------------------------
 st.set_page_config(page_title="Food Nutrition Estimator", layout="wide")
 st.title("🍽️ Food Nutrition Estimator")
@@ -81,16 +88,16 @@ if st.button("Predict Nutrition"):
     else:
         col1, col2 = st.columns(2)
 
-        # -------- IMAGE --------
+        # IMAGE
         with col1:
-            img_url = get_food_image(food)
+            img = get_food_image(food)
 
-            if img_url:
-                st.image(img_url, caption=food, use_container_width=True)
+            if img:
+                st.image(img, caption=food, use_container_width=True)
             else:
-                st.info("No image found for this food")
+                st.error("Image not found")
 
-        # -------- NUTRITION --------
+        # NUTRITION
         with col2:
             n = nutrition_db[food]
             st.subheader("Nutritional Values")
@@ -99,7 +106,7 @@ if st.button("Predict Nutrition"):
             st.write(f"Carbohydrates: {n['Carbs']} g")
             st.write(f"Fat: {n['Fat']} g")
 
-        # -------- DONUT CHART --------
+        # CHART
         macros = {
             "Protein": n["Protein"],
             "Carbs": n["Carbs"],
@@ -117,4 +124,3 @@ if st.button("Predict Nutrition"):
         ax.set_title("Macronutrient Breakdown")
 
         st.pyplot(fig)
-
