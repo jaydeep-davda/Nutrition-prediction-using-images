@@ -1,5 +1,6 @@
 import streamlit as st
 import matplotlib.pyplot as plt
+import random
 
 # -----------------------------
 # Nutrition Database
@@ -16,17 +17,44 @@ nutrition_db = {
 }
 
 # -----------------------------
-# Food Images (STATIC)
+# Food Images (MULTIPLE)
 # -----------------------------
 food_images = {
-    "Pizza": "https://i.imgur.com/6R6KJ9g.jpg",
-    "Pasta": "https://i.imgur.com/oYiTqum.jpg",
-    "Burger": "https://i.imgur.com/8GQZ7pQ.jpg",
-    "Biryani": "https://i.imgur.com/wYJrHfL.jpg",
-    "Ice Cream": "https://i.imgur.com/5M0p5Ks.jpg",
-    "Steak": "https://i.imgur.com/y2K4VxP.jpg",
-    "Omelette": "https://i.imgur.com/4C0uYgU.jpg",
-    "Quinoa Bowl": "https://i.imgur.com/dz3Fh5E.jpg"
+    "Pizza": [
+        "https://i.imgur.com/6R6KJ9g.jpg",
+        "https://i.imgur.com/7pOqH2L.jpg",
+        "https://i.imgur.com/LwQzX4U.jpg"
+    ],
+    "Pasta": [
+        "https://i.imgur.com/oYiTqum.jpg",
+        "https://i.imgur.com/zKQ6H1Z.jpg",
+        "https://i.imgur.com/0XKznJY.jpg"
+    ],
+    "Burger": [
+        "https://i.imgur.com/8GQZ7pQ.jpg",
+        "https://i.imgur.com/eZ5yGqO.jpg",
+        "https://i.imgur.com/QZ9YQ7N.jpg"
+    ],
+    "Biryani": [
+        "https://i.imgur.com/wYJrHfL.jpg",
+        "https://i.imgur.com/tmJH5eM.jpg"
+    ],
+    "Ice Cream": [
+        "https://i.imgur.com/5M0p5Ks.jpg",
+        "https://i.imgur.com/MZkR3P2.jpg"
+    ],
+    "Steak": [
+        "https://i.imgur.com/y2K4VxP.jpg",
+        "https://i.imgur.com/Dp3w6gM.jpg"
+    ],
+    "Omelette": [
+        "https://i.imgur.com/4C0uYgU.jpg",
+        "https://i.imgur.com/qL3Y8vB.jpg"
+    ],
+    "Quinoa Bowl": [
+        "https://i.imgur.com/dz3Fh5E.jpg",
+        "https://i.imgur.com/1B0Z9tL.jpg"
+    ]
 }
 
 # -----------------------------
@@ -50,8 +78,9 @@ if st.button("Predict Nutrition"):
 
         # -------- IMAGE --------
         with col1:
-            image_url = food_images.get(food)
-            st.image(image_url, caption=food, use_container_width=True)
+            image_list = food_images.get(food)
+            random_image = random.choice(image_list)
+            st.image(random_image, caption=food, use_container_width=True)
 
         # -------- NUTRITION --------
         with col2:
