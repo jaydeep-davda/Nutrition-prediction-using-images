@@ -1,5 +1,8 @@
 import streamlit as st
 import matplotlib.pyplot as plt
+import requests
+from PIL import Image
+from io import BytesIO
 
 # -----------------------------
 # Nutrition Database
@@ -31,12 +34,24 @@ if st.button("Predict Nutrition"):
         st.warning("Please select a food item.")
     else:
         # -------- IMAGE (SAFE, NO REQUESTS) --------
+                # -------- IMAGE FIX --------
         image_url = f"https://source.unsplash.com/600x400/?{food},food"
+        response = requests.get(image_url)
+
+        if response.status_code == 200:
+            img = Image.open(BytesIO(response.content))
+        else:
+            img = None
 
         col1, col2 = st.columns(2)
 
         with col1:
-            st.image(image_url, caption=food, use_column_width=True)
+            if img:
+                st.image(img, caption=food, use_container_width=True)
+            else:
+                st.error("Image could not be loaded")
+
+        col1, col2 = st.columns(2)
 
         with col2:
             n = nutrition_db[food]
@@ -64,3 +79,4 @@ if st.button("Predict Nutrition"):
         ax.set_title("Macronutrient Breakdown")
 
         st.pyplot(fig)
+
