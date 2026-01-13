@@ -1,8 +1,5 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-import requests
-from PIL import Image
-from io import BytesIO
 
 # -----------------------------
 # Nutrition Database
@@ -19,15 +16,8 @@ nutrition_db = {
 }
 
 # -----------------------------
-# Streamlit UI
+# Food Images (STATIC)
 # -----------------------------
-st.set_page_config(page_title="Food Nutrition Estimator", layout="wide")
-st.title("🍽️ Food Nutrition Estimator")
-
-food = st.selectbox(
-    "Select a food item",
-    ["-- Select --"] + list(nutrition_db.keys())
-)
 food_images = {
     "Pizza": "https://i.imgur.com/6R6KJ9g.jpg",
     "Pasta": "https://i.imgur.com/oYiTqum.jpg",
@@ -39,34 +29,31 @@ food_images = {
     "Quinoa Bowl": "https://i.imgur.com/dz3Fh5E.jpg"
 }
 
+# -----------------------------
+# Streamlit UI
+# -----------------------------
+st.set_page_config(page_title="Food Nutrition Estimator", layout="wide")
+st.title("🍽️ Food Nutrition Estimator")
+
+food = st.selectbox(
+    "Select a food item",
+    ["-- Select --"] + list(nutrition_db.keys())
+)
+
 if st.button("Predict Nutrition"):
+
     if food == "-- Select --":
         st.warning("Please select a food item.")
+
     else:
-        # -------- IMAGE (SAFE, NO REQUESTS) --------
-                # -------- IMAGE FIX --------
-        image_url = food_images.get(food)
-
-with col1:
-    st.image(image_url, caption=food, use_container_width=True)
-
-        response = requests.get(image_url)
-
-        if response.status_code == 200:
-            img = Image.open(BytesIO(response.content))
-        else:
-            img = None
-
         col1, col2 = st.columns(2)
 
+        # -------- IMAGE --------
         with col1:
-            if img:
-                st.image(img, caption=food, use_container_width=True)
-            else:
-                st.error("Image could not be loaded")
+            image_url = food_images.get(food)
+            st.image(image_url, caption=food, use_container_width=True)
 
-        col1, col2 = st.columns(2)
-
+        # -------- NUTRITION --------
         with col2:
             n = nutrition_db[food]
             st.subheader("Nutritional Values")
@@ -93,5 +80,3 @@ with col1:
         ax.set_title("Macronutrient Breakdown")
 
         st.pyplot(fig)
-
-
