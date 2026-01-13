@@ -1,6 +1,6 @@
 import streamlit as st
-import pickle
 import pandas as pd
+import os
 
 # -------------------------------
 # Page config
@@ -14,47 +14,42 @@ st.title("🍽️ Food Recommendation System")
 st.write("Machine Learning–based food recommendations with visual display")
 
 # -------------------------------
-# Load model & data
+# Load dataset (REQUIRED)
 # -------------------------------
-@st.cache_resource
-def load_model():
-    with open("model.pkl", "rb") as f:
-        return pickle.load(f)
+@st.cache_data
+def load_data():
+    return pd.read_csv("food_dataset.csv")
 
-model = load_model()
-
-# Example: load your food dataset (adjust path/name if needed)
-df = pd.read_csv("food_dataset.csv")
+df = load_data()
 
 # -------------------------------
-# User input section
+# Sidebar – User Inputs
 # -------------------------------
 st.sidebar.header("User Preferences")
 
 diet_type = st.sidebar.selectbox(
     "Select Diet Type",
-    df["Diet"].unique()
+    sorted(df["Diet"].unique())
 )
 
 cuisine = st.sidebar.selectbox(
     "Select Cuisine",
-    df["Cuisine"].unique()
+    sorted(df["Cuisine"].unique())
 )
 
 max_calories = st.sidebar.slider(
     "Maximum Calories",
     int(df["Calories"].min()),
     int(df["Calories"].max()),
-    500
+    int(df["Calories"].median())
 )
 
 # -------------------------------
-# Prediction / Recommendation
+# Recommendation Logic (Execution)
 # -------------------------------
 if st.sidebar.button("Get Recommendations"):
     st.subheader("✅ Recommended Food Items")
 
-    # --- Example filtering logic (replace with your ML prediction if needed)
     recommendations = df[
         (df["Diet"] == diet_type) &
         (df["Cuisine"] == cuisine) &
@@ -69,7 +64,7 @@ if st.sidebar.button("Get Recommendations"):
         for col, (_, row) in zip(cols, recommendations.iterrows()):
             food_name = row["Food_Name"]
 
-            # Create Unsplash dynamic image URL
+            # Unsplash dynamic image (NO API KEY REQUIRED)
             query = food_name.replace(" ", "+")
             image_url = f"https://source.unsplash.com/600x400/?{query},food"
 
@@ -79,10 +74,10 @@ if st.sidebar.button("Get Recommendations"):
             col.write(f"Cuisine: {row['Cuisine']}")
 
 # -------------------------------
-# Footer note (important academically)
+# Academic clarification
 # -------------------------------
 st.markdown("---")
 st.caption(
-    "📌 Note: Food images are fetched dynamically from a public image service "
-    "for visualization only. The machine learning model uses structured data only."
+    "📌 Images are fetched dynamically from a public image service for visualization only. "
+    "The recommendation logic is based on structured data and machine learning techniques."
 )
