@@ -1,5 +1,8 @@
 import streamlit as st
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+import requests
+from PIL import Image
+from io import BytesIO
 
 # -----------------------------
 # Nutrition Database
@@ -51,9 +54,7 @@ nutrition_db = {
 # -----------------------------
 st.set_page_config(page_title="Food Recognition & Nutrition Estimator", layout="wide")
 st.title("🍽️ Food Recognition & Nutrition Estimator")
-st.write("Select a food item to see its nutritional values and macronutrient breakdown.")
 
-# Food selection
 food_options = ["-- Select a food item --"] + list(nutrition_db.keys())
 food = st.selectbox("Select a food item", food_options)
 
@@ -61,46 +62,33 @@ if st.button("Predict Nutrition"):
     if food == "-- Select a food item --":
         st.warning("Please select a food item first.")
     else:
-        # -----------------------------
-        # Fetch food image dynamically from Unsplash
-        # -----------------------------
-        image_url = f"https://source.unsplash.com/400x300/?{food.replace(' ', '%20')}"
-        
-        # Create two columns for image and nutrition side by side
-        col1, col2 = st.columns([1, 1])
-        
+        image_url = f"https://source.unsplash.com/600x400/?{food.replace(' ', '%20')},food"
+        response = requests.get(image_url)
+        img = Image.open(BytesIO(response.content))
+
+        col1, col2 = st.columns(2)
+
         with col1:
-            image_url = f"https://source.unsplash.com/600x400/?{food.replace(' ', '%20')},food"
+            st.image(img, caption=food, use_column_width=True)
 
-response = requests.get(image_url)
-img = Image.open(BytesIO(response.content))
-
-st.image(img, caption=food, use_column_width=True)
-        
         with col2:
             nutrition = nutrition_db[food]
-            st.subheader("🍴 Predicted Food:")
-            st.write(food)
-            
-            st.subheader("🧮 Nutritional Values:")
-            st.write(f"**Calories:** {nutrition['Calories']} kcal")
-            st.write(f"**Protein:** {nutrition['Protein']} g")
-            st.write(f"**Carbohydrates:** {nutrition['Carbs']} g")
-            st.write(f"**Fat:** {nutrition['Fat']} g")
-        
-        # -----------------------------
-        # Interactive donut chart for macronutrients
-        # -----------------------------
-        macro_nutrition = {k: v for k, v in nutrition.items() if k != "Calories"}
-        
-        fig = go.Figure(data=[go.Pie(
-            labels=list(macro_nutrition.keys()),
-            values=list(macro_nutrition.values()),
-            hole=0.5,
-            marker=dict(colors=['skyblue', 'lightgreen', 'salmon']),
-            hoverinfo="label+percent+value"
-        )])
-        fig.update_layout(title_text="Macronutrient Breakdown")
-        
-        st.plotly_chart(fig, use_container_width=True)
+            st.subheader("Nutritional Values")
+            st.write(f"Calories: {nutrition['Calories']} kcal")
+            st.write(f"Protein: {nutrition['Protein']} g")
+            st.write(f"Carbohydrates: {nutrition['Carbs']} g")
+            st.write(f"Fat: {nutrition['Fat']} g")
 
+        macro_nutrition = {k: v for k, v in nutrition.items() if k != "Calories"}
+
+        fig, ax = plt.subplots()
+        ax.pie(
+            macro_nutrition.values(),
+            labels=macro_nutrition.keys(),
+            autopct='%1.1f%%',
+            startangle=90,
+            wedgeprops=dict(width=0.4)
+        )
+        ax.set_title("Macronutrient Breakdown")
+
+        st.pyplot(fig)
