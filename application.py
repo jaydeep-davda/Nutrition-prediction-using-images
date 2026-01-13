@@ -28,6 +28,16 @@ food = st.selectbox(
     "Select a food item",
     ["-- Select --"] + list(nutrition_db.keys())
 )
+food_images = {
+    "Pizza": "https://i.imgur.com/6R6KJ9g.jpg",
+    "Pasta": "https://i.imgur.com/oYiTqum.jpg",
+    "Burger": "https://i.imgur.com/8GQZ7pQ.jpg",
+    "Biryani": "https://i.imgur.com/wYJrHfL.jpg",
+    "Ice Cream": "https://i.imgur.com/5M0p5Ks.jpg",
+    "Steak": "https://i.imgur.com/y2K4VxP.jpg",
+    "Omelette": "https://i.imgur.com/4C0uYgU.jpg",
+    "Quinoa Bowl": "https://i.imgur.com/dz3Fh5E.jpg"
+}
 
 if st.button("Predict Nutrition"):
     if food == "-- Select --":
@@ -35,7 +45,11 @@ if st.button("Predict Nutrition"):
     else:
         # -------- IMAGE (SAFE, NO REQUESTS) --------
                 # -------- IMAGE FIX --------
-        image_url = f"https://source.unsplash.com/600x400/?{food},food"
+        image_url = food_images.get(food)
+
+with col1:
+    st.image(image_url, caption=food, use_container_width=True)
+
         response = requests.get(image_url)
 
         if response.status_code == 200:
@@ -79,4 +93,5 @@ if st.button("Predict Nutrition"):
         ax.set_title("Macronutrient Breakdown")
 
         st.pyplot(fig)
+
 
