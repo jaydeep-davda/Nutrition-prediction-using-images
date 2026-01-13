@@ -1,13 +1,43 @@
+# application.py
 import streamlit as st
-import matplotlib.pyplot as plt
-import requests
-import random
-from bs4 import BeautifulSoup
 
-# -----------------------------
-# Nutrition Database
-# -----------------------------
-nutrition_db = {
+# -------------------
+# Install missing packages if needed
+# -------------------
+def install_package(package):
+    import subprocess
+    import sys
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+try:
+    from bs4 import BeautifulSoup
+except ModuleNotFoundError:
+    install_package("beautifulsoup4")
+    from bs4 import BeautifulSoup
+
+try:
+    import pandas as pd
+except ModuleNotFoundError:
+    install_package("pandas")
+    import pandas as pd
+
+try:
+    import requests
+except ModuleNotFoundError:
+    install_package("requests")
+    import requests
+
+# -------------------
+# Streamlit App Starts
+# -------------------
+st.set_page_config(page_title="Nutrition Prediction", page_icon="🍎", layout="wide")
+st.title("🍏 Nutrition Prediction Using Images")
+st.write("Upload a food image to predict nutrition, or explore nutrition data from a sample table or a webpage.")
+
+# -------------------
+# Nutrition Table
+# -------------------
+nutrition_data = {
     "Pizza": {"Calories": 285, "Protein": 12, "Carbs": 36, "Fat": 10},
     "Pasta": {"Calories": 310, "Protein": 11, "Carbs": 42, "Fat": 9},
     "Risotto": {"Calories": 320, "Protein": 8, "Carbs": 45, "Fat": 10},
@@ -49,80 +79,48 @@ nutrition_db = {
     "Quinoa Bowl": {"Calories": 250, "Protein": 9, "Carbs": 35, "Fat": 7}
 }
 
-# -----------------------------
-# DuckDuckGo Image Fetch
-# -----------------------------
-def get_food_image(food):
-    search_url = f"https://duckduckgo.com/?q={food}+food&iax=images&ia=images"
-    headers = {"User-Agent": "Mozilla/5.0"}
+# Convert dictionary to DataFrame
+nutrition_df = pd.DataFrame(nutrition_data).T.reset_index()
+nutrition_df.rename(columns={"index": "Food"}, inplace=True)
+st.subheader("🍽️ Nutrition Table")
+st.dataframe(nutrition_df)
 
-    html = requests.get(search_url, headers=headers).text
-    soup = BeautifulSoup(html, "html.parser")
+# -------------------
+# Image Upload & Prediction Section
+# -------------------
+st.subheader("Upload a Food Image to Predict Nutrition")
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "png", "jpeg"])
 
-    images = soup.find_all("img")
+if uploaded_file:
+    st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
+    
+    # Simple "prediction" based on food name input
+    food_name = st.text_input("Enter the food name (as shown in table) for prediction:")
+    if food_name:
+        food_name = food_name.strip()
+        if food_name in nutrition_data:
+            st.success(f"Nutrition for **{food_name}**:")
+            st.json(nutrition_data[food_name])
+        else:
+            st.error("Food not found in table. Check spelling or choose a different item.")
 
-    valid_imgs = [img["src"] for img in images if img.get("src") and "http" in img["src"]]
+# -------------------
+# Optional: Web Scraping Section
+# -------------------
+st.subheader("Optional: Scrape Nutrition Info from a Website")
+url = st.text_input("Enter a URL to scrape (optional):", key="url_input")
 
-    if valid_imgs:
-        return random.choice(valid_imgs)
+if url:
+    try:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, "html.parser")
+        st.write("✅ Webpage fetched successfully!")
+        st.write("Page Title:", soup.title.string if soup.title else "No title found")
+    except Exception as e:
+        st.error(f"Error fetching the page: {e}")
 
-    return None
-
-
-# -----------------------------
-# UI
-# -----------------------------
-st.set_page_config(page_title="Food Nutrition Estimator", layout="wide")
-st.title("🍽️ Food Nutrition Estimator")
-
-food = st.selectbox(
-    "Select a food item",
-    ["-- Select --"] + list(nutrition_db.keys())
-)
-
-if st.button("Predict Nutrition"):
-
-    if food == "-- Select --":
-        st.warning("Please select a food item.")
-
-    else:
-        col1, col2 = st.columns(2)
-
-        # IMAGE
-        with col1:
-            img = get_food_image(food)
-
-            if img:
-                st.image(img, caption=food, use_container_width=True)
-            else:
-                st.error("Image not found")
-
-        # NUTRITION
-        with col2:
-            n = nutrition_db[food]
-            st.subheader("Nutritional Values")
-            st.write(f"Calories: {n['Calories']} kcal")
-            st.write(f"Protein: {n['Protein']} g")
-            st.write(f"Carbohydrates: {n['Carbs']} g")
-            st.write(f"Fat: {n['Fat']} g")
-
-        # CHART
-        macros = {
-            "Protein": n["Protein"],
-            "Carbs": n["Carbs"],
-            "Fat": n["Fat"]
-        }
-
-        fig, ax = plt.subplots()
-        ax.pie(
-            macros.values(),
-            labels=macros.keys(),
-            autopct="%1.1f%%",
-            startangle=90,
-            wedgeprops=dict(width=0.4)
-        )
-        ax.set_title("Macronutrient Breakdown")
-
-        st.pyplot(fig)
-
-
+# -------------------
+# Footer
+# -------------------
+st.markdown("---")
+st.write("Developed with ❤️ using Streamlit")
