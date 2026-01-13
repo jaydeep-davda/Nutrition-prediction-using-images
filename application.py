@@ -1,5 +1,6 @@
 import streamlit as st
 import matplotlib.pyplot as plt
+import requests
 
 # -----------------------------
 # Nutrition Database
@@ -47,35 +48,73 @@ nutrition_db = {
 }
 
 # -----------------------------
-# UI
+# Wikipedia Image Fetcher
 # -----------------------------
-st.set_page_config(page_title="Food Recognition & Nutrition Estimator")
-st.title("Food Recognition & Nutrition Estimator")
-st.write("This system predicts food type and displays its nutritional values.")
+def get_food_image(food):
+    url = "https://en.wikipedia.org/api/rest_v1/page/summary/" + food.replace(" ", "%20")
+    res = requests.get(url)
 
-# Add placeholder so nothing is selected by default
-food_options = ["-- Select a food item --"] + list(nutrition_db.keys())
-food = st.selectbox("Select a food item", food_options)
+    if res.status_code == 200:
+        data = res.json()
+        if "thumbnail" in data:
+            return data["thumbnail"]["source"]
+
+    return None
+
+
+# -----------------------------
+# Streamlit UI
+# -----------------------------
+st.set_page_config(page_title="Food Nutrition Estimator", layout="wide")
+st.title("🍽️ Food Nutrition Estimator")
+
+food = st.selectbox(
+    "Select a food item",
+    ["-- Select --"] + list(nutrition_db.keys())
+)
 
 if st.button("Predict Nutrition"):
-    if food == "-- Select a food item --":
-        st.warning("Please select a food item first.")
+
+    if food == "-- Select --":
+        st.warning("Please select a food item.")
+
     else:
-        nutrition = nutrition_db[food]
+        col1, col2 = st.columns(2)
 
-        st.subheader("Predicted Food:")
-        st.write(food)
+        # -------- IMAGE --------
+        with col1:
+            img_url = get_food_image(food)
 
-        st.subheader("Nutritional Values:")
-        st.write("Calories:", nutrition["Calories"], "kcal")
-        st.write("Protein:", nutrition["Protein"], "g")
-        st.write("Carbohydrates:", nutrition["Carbs"], "g")
-        st.write("Fat:", nutrition["Fat"], "g")
+            if img_url:
+                st.image(img_url, caption=food, use_container_width=True)
+            else:
+                st.info("No image found for this food")
 
-        # Bar chart
+        # -------- NUTRITION --------
+        with col2:
+            n = nutrition_db[food]
+            st.subheader("Nutritional Values")
+            st.write(f"Calories: {n['Calories']} kcal")
+            st.write(f"Protein: {n['Protein']} g")
+            st.write(f"Carbohydrates: {n['Carbs']} g")
+            st.write(f"Fat: {n['Fat']} g")
+
+        # -------- DONUT CHART --------
+        macros = {
+            "Protein": n["Protein"],
+            "Carbs": n["Carbs"],
+            "Fat": n["Fat"]
+        }
+
         fig, ax = plt.subplots()
-        ax.bar(nutrition.keys(), nutrition.values())
+        ax.pie(
+            macros.values(),
+            labels=macros.keys(),
+            autopct="%1.1f%%",
+            startangle=90,
+            wedgeprops=dict(width=0.4)
+        )
         ax.set_title("Macronutrient Breakdown")
-        ax.set_ylabel("Amount")
 
         st.pyplot(fig)
+
