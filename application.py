@@ -1,8 +1,5 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-import requests
-from PIL import Image
-from io import BytesIO
 
 # -----------------------------
 # Nutrition Database
@@ -33,24 +30,13 @@ if st.button("Predict Nutrition"):
     if food == "-- Select --":
         st.warning("Please select a food item.")
     else:
-        # -------- IMAGE (SAFE) --------
-        headers = {"User-Agent": "Mozilla/5.0"}
-        try:
-            img_url = f"https://source.unsplash.com/600x400/?{food},food"
-            r = requests.get(img_url, headers=headers, timeout=10)
-            img = Image.open(BytesIO(r.content))
-        except Exception:
-            r = requests.get(
-                "https://via.placeholder.com/600x400.png?text=Food+Image",
-                headers=headers
-            )
-            img = Image.open(BytesIO(r.content))
+        # -------- IMAGE (SAFE, NO REQUESTS) --------
+        image_url = f"https://source.unsplash.com/600x400/?{food},food"
 
-        # -------- LAYOUT --------
         col1, col2 = st.columns(2)
 
         with col1:
-            st.image(img, caption=food, use_column_width=True)
+            st.image(image_url, caption=food, use_column_width=True)
 
         with col2:
             n = nutrition_db[food]
