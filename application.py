@@ -1,3 +1,5 @@
+!pip install beautifulsoup4
+
 import streamlit as st
 import matplotlib.pyplot as plt
 import requests
@@ -124,3 +126,4 @@ if st.button("Predict Nutrition"):
         ax.set_title("Macronutrient Breakdown")
 
         st.pyplot(fig)
+
