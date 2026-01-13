@@ -63,8 +63,24 @@ if st.button("Predict Nutrition"):
         st.warning("Please select a food item first.")
     else:
         image_url = f"https://source.unsplash.com/600x400/?{food.replace(' ', '%20')},food"
-        response = requests.get(image_url)
-        img = Image.open(BytesIO(response.content))
+
+headers = {
+    "User-Agent": "Mozilla/5.0"
+}
+
+try:
+    response = requests.get(image_url, headers=headers, timeout=10)
+    response.raise_for_status()
+    img = Image.open(BytesIO(response.content))
+except Exception:
+    # fallback image if Unsplash fails
+    img = Image.open(BytesIO(
+        requests.get(
+            "https://via.placeholder.com/600x400.png?text=Food+Image",
+            headers=headers
+        ).content
+    ))
+
 
         col1, col2 = st.columns(2)
 
@@ -92,3 +108,4 @@ if st.button("Predict Nutrition"):
         ax.set_title("Macronutrient Breakdown")
 
         st.pyplot(fig)
+
